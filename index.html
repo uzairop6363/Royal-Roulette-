@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Roulette - Casino Standard</title>
+    <title>Royal Roulette - Final Fix</title>
     <style>
         /* --- CORE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            background: #120505; /* Deep Casino Maroon */
+            background: #120505;
             font-family: 'Arial', sans-serif;
             height: 100vh; width: 100vw;
             overflow: hidden;
@@ -20,139 +20,129 @@
         .table-view {
             width: 100%; height: 100%;
             position: absolute; top: 0; left: 0;
-            /* Aapki nayi Dark Table Image */
-            background: url('assets/table_dark.jpg') no-repeat center/100% 100%; 
+            background: url('assets/table_dark.jpg') no-repeat center/100% 100%;
             z-index: 10;
         }
 
-        /* Betting Grid (Hidden Click Zones) */
-        .grid-container {
-            position: absolute; top: 15%; left: 5%; width: 90%; height: 65%;
-            display: grid;
-            grid-template-columns: 15% 1fr 1fr 1fr; /* Sidebar + 3 Cols */
-            gap: 2px;
-        }
-        .click-zone { position: relative; } 
-        /* Debugging ke liye border hata dia hai */
+        /* --- GRID SYSTEM (Adjusted for Accuracy) --- */
         
-        .side-col { grid-column: 1; grid-row: span 4; } /* Left Bets */
+        /* Area for Numbers 1 to 36 */
+        .numbers-grid {
+            position: absolute;
+            top: 13.5%;      /* Image me jahan 1,2,3 shuru hoty hain */
+            left: 27%;       /* Sidebar bets ke baad */
+            width: 70%;      /* Numbers ki churai */
+            height: 73%;     /* 34,35,36 tak ki lambai */
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* 3 Columns */
+            grid-template-rows: repeat(12, 1fr); /* 12 Rows */
+            gap: 1px;
+        }
+
+        /* Zero "0" Area */
+        .zero-zone {
+            position: absolute; top: 6.5%; left: 27%; width: 70%; height: 6.5%;
+            z-index: 15;
+        }
+
+        /* Side Bets (Left Column) - Simplified Mapping */
+        .side-bets-container {
+            position: absolute; top: 13.5%; left: 3%; width: 23%; height: 73%;
+            display: flex; flex-direction: column;
+        }
+        .side-block-1 { height: 33.33%; width: 100%; } /* 1st 12 */
+        .side-block-2 { height: 33.33%; width: 100%; } /* 2nd 12 */
+        .side-block-3 { height: 33.33%; width: 100%; } /* 3rd 12 */
+
+        /* Click Zone Style (Debug border hata dia hai) */
+        .click-zone { position: relative; }
 
         /* Chips on Table */
         .chip-placed {
-            position: absolute; top: 50%; left: 50%; width: 22px; height: 22px;
+            position: absolute; top: 50%; left: 50%; 
+            width: 32px; height: 32px; /* Bigger chips on table */
             transform: translate(-50%, -50%) scale(0);
-            animation: popIn 0.2s forwards; pointer-events: none;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8)); z-index: 20;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.8)); 
+            z-index: 20;
         }
         @keyframes popIn { to { transform: translate(-50%, -50%) scale(1); } }
 
         /* --- 2. TIMER (TOP LEFT) --- */
         .timer-badge {
             position: absolute; top: 15px; left: 15px;
-            width: 50px; height: 50px;
-            background: rgba(0,0,0,0.6);
+            width: 55px; height: 55px;
+            background: rgba(0,0,0,0.8);
             border: 2px solid #ffd700; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            z-index: 50;
+            z-index: 50; box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        /* SVG Circle for Progress */
         .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
         .timer-circle {
             fill: none; stroke: #ffd700; stroke-width: 4;
             stroke-dasharray: 125; stroke-dashoffset: 0;
             transition: stroke-dashoffset 1s linear, stroke 0.3s;
         }
-        .timer-text {
-            position: absolute; color: #fff; font-weight: bold; font-size: 18px;
-        }
-        /* Red Alert Class */
+        .timer-text { position: absolute; color: #fff; font-weight: bold; font-size: 20px; }
         .timer-danger .timer-circle { stroke: #ff0000; }
         .timer-danger .timer-text { color: #ff0000; animation: pulse 0.5s infinite; }
         @keyframes pulse { 50% { opacity: 0.5; } }
 
-
-        /* --- 3. CHIPS SIDEBAR (RIGHT SIDE) --- */
-        .right-sidebar {
-            position: absolute; right: 0; top: 20%; bottom: 15%;
-            width: 70px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 50;
-            padding-right: 5px;
+        /* --- 3. SINGLE CHIP SELECTOR (RIGHT SIDE) --- */
+        .chip-selector-area {
+            position: absolute; right: 10px; top: 50%; 
+            transform: translateY(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            z-index: 60;
         }
 
-        .scroll-btn {
-            width: 30px; height: 30px; background: rgba(0,0,0,0.5);
-            border: 1px solid gold; border-radius: 50%;
-            color: gold; font-size: 12px; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; margin: 5px 0;
+        .arrow-btn {
+            width: 40px; height: 40px;
+            background: url('assets/btn_arrow.png') no-repeat center/contain;
+            cursor: pointer; filter: drop-shadow(0 2px 5px #000);
+            transition: transform 0.1s;
         }
+        .arrow-btn.up { transform: rotate(0deg); }
+        .arrow-btn.down { transform: rotate(180deg); }
+        .arrow-btn:active { transform: scale(0.9) rotate(inherit); }
 
-        .chip-stack {
-            display: flex; flex-direction: column; gap: 12px;
-            height: 300px; overflow-y: auto;
-            align-items: center;
-            /* Hide Scrollbar */
-            scrollbar-width: none; -ms-overflow-style: none;
+        /* The Main Big Chip */
+        .current-chip {
+            width: 75px; height: 75px; /* BIGGER CHIP */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8));
         }
-        .chip-stack::-webkit-scrollbar { display: none; }
+        .chip-anim { animation: chipBounce 0.3s; }
+        @keyframes chipBounce { 0%{transform:scale(0.8);} 50%{transform:scale(1.1);} 100%{transform:scale(1);} }
 
-        .chip-selector {
-            width: 55px; height: 55px; transition: 0.2s; cursor: pointer;
-            opacity: 0.6; transform: scale(0.9);
-        }
-        .chip-selector img { width: 100%; height: 100%; object-fit: contain; }
-        
-        .chip-selector.active {
-            opacity: 1; transform: scale(1.1) translateX(-5px);
-            filter: drop-shadow(0 0 8px gold);
-        }
-
-        /* --- 4. BOTTOM STATS (TEXT ONLY) --- */
+        /* --- 4. BOTTOM STATS (Minimal) --- */
         .bottom-stats {
             position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 50px;
-            background: linear-gradient(to top, #000 80%, transparent);
-            display: flex; flex-direction: column; justify-content: flex-end;
-            padding: 5px 15px; z-index: 60;
-            pointer-events: none; /* Touches pass through */
+            height: 40px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            display: flex; align-items: flex-end; justify-content: space-between;
+            padding: 5px 15px; z-index: 60; pointer-events: none;
         }
+        .stat-group { font-size: 11px; font-weight: 600; text-shadow: 0 1px 2px #000; }
+        .lbl { color: #fff; margin-right: 3px; }
+        .val { color: #ffcc00; font-size: 13px; font-family: monospace; }
 
-        .stat-row {
-            font-size: 12px; font-weight: 500; margin-bottom: 3px;
-            text-shadow: 0 1px 2px #000;
-        }
-        .label-white { color: #e0e0e0; margin-right: 5px; }
-        .val-yellow { color: #ffcc00; font-weight: bold; font-family: monospace; }
-
-
-        /* --- 5. WHEEL OVERLAY (POPUP) --- */
+        /* --- 5. WHEEL OVERLAY --- */
         .wheel-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 100;
+            background: rgba(0,0,0,0.95); z-index: 100;
             display: flex; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
-            backdrop-filter: blur(5px);
         }
         .wheel-overlay.show { opacity: 1; pointer-events: auto; }
-
         .wheel-group { position: relative; width: 300px; height: 300px; transform: scale(0.8); transition: 0.5s; }
         .wheel-overlay.show .wheel-group { transform: scale(1); }
-
         .wheel-img { position: absolute; top:0; left:0; width:100%; height:100%; }
-        .spinner { transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); }
-        .ball { 
-            position: absolute; top: 12%; left: 50%; width: 12px; height: 12px; 
-            background: white; border-radius: 50%; box-shadow: 0 0 5px white; 
-            display: none; 
-        }
-        .pointer {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid gold;
-            z-index: 10;
-        }
+        .ball { position: absolute; top: 12%; left: 50%; width: 12px; height: 12px; background: white; border-radius: 50%; display: none; z-index:5; box-shadow: 0 0 10px white; }
+        .pointer { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid gold; z-index: 10; }
 
-        /* --- 6. WIN POPUP --- */
+        /* Win Popup */
         .win-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             width: 250px; height: 120px;
@@ -167,12 +157,18 @@
 <body>
 
     <div class="table-view">
-        <div class="grid-container" id="grid">
-            <div class="click-zone side-col" onclick="placeBet('left1', this)"></div>
-            <div class="click-zone side-col" onclick="placeBet('left2', this)"></div>
-            <div class="click-zone side-col" onclick="placeBet('left3', this)"></div>
-            
+        
+        <div class="zero-zone click-zone" onclick="placeBet(0, this)"></div>
+
+        <div class="side-bets-container">
+            <div class="side-block-1 click-zone" onclick="placeBet('1st12', this)"></div>
+            <div class="side-block-2 click-zone" onclick="placeBet('2nd12', this)"></div>
+            <div class="side-block-3 click-zone" onclick="placeBet('3rd12', this)"></div>
+        </div>
+
+        <div class="numbers-grid" id="numGrid">
             </div>
+
     </div>
 
     <div class="timer-badge" id="timerBadge">
@@ -182,38 +178,20 @@
         <span class="timer-text" id="timerText">10</span>
     </div>
 
-    <div class="right-sidebar">
-        <div class="scroll-btn" onclick="scrollChips(-1)">▲</div>
+    <div class="chip-selector-area">
+        <div class="arrow-btn up" onclick="changeChip(1)"></div>
         
-        <div class="chip-stack" id="chipStack">
-            <div class="chip-selector active" onclick="setChip(10, 'assets/chip_10.png', this)">
-                <img src="assets/chip_10.png">
-            </div>
-            <div class="chip-selector" onclick="setChip(50, 'assets/chip_50.png', this)">
-                <img src="assets/chip_50.png">
-            </div>
-            <div class="chip-selector" onclick="setChip(100, 'assets/chip_100.png', this)">
-                <img src="assets/chip_100.png">
-            </div>
-            <div class="chip-selector" onclick="setChip(500, 'assets/chip_500.png', this)">
-                <img src="assets/chip_500.png">
-            </div>
-            <div class="chip-selector" onclick="setChip(1000, 'assets/chip_1k.png', this)">
-                <img src="assets/chip_1k.png">
-            </div>
-        </div>
-
-        <div class="scroll-btn" onclick="scrollChips(1)">▼</div>
+        <img src="assets/chip_10.png" id="activeChipImg" class="current-chip">
+        
+        <div class="arrow-btn down" onclick="changeChip(-1)"></div>
     </div>
 
     <div class="bottom-stats">
-        <div class="stat-row">
-            <span class="label-white">Total Bet</span>
-            <span class="val-yellow">Rs<span id="totalBet">0</span></span>
+        <div class="stat-group">
+            <span class="lbl">Total Bet</span><span class="val">Rs<span id="totalBet">0</span></span>
         </div>
-        <div class="stat-row">
-            <span class="label-white">Balance</span>
-            <span class="val-yellow">Rs<span id="balance">50000</span></span>
+        <div class="stat-group">
+            <span class="lbl">Balance</span><span class="val">Rs<span id="balance">50000</span></span>
         </div>
     </div>
 
@@ -221,66 +199,117 @@
         <div class="wheel-group">
             <div class="pointer"></div>
             <img src="assets/wheel_outer.png" class="wheel-img">
-            <img src="assets/wheel_spinner.png" class="wheel-img spinner" id="spinner">
+            <img src="assets/wheel_spinner.png" class="wheel-img" id="spinner">
             <div class="ball" id="ball"></div>
         </div>
-        
-        <div class="win-box" id="winModal">
-            <div class="win-num" id="winVal">0</div>
-        </div>
+        <div class="win-box" id="winModal"><div class="win-num" id="winVal">0</div></div>
     </div>
 
     <script>
-        // --- GAME STATE ---
+        // --- GAME CONFIG ---
+        const chips = [10, 50, 100, 500, 1000];
+        const chipFiles = [
+            'assets/chip_10.png', 'assets/chip_50.png', 'assets/chip_100.png', 
+            'assets/chip_500.png', 'assets/chip_1k.png'
+        ];
+        
+        let chipIndex = 0; // Current selected chip index
         let balance = 50000;
         let currentBet = 0;
-        let currentChip = 10;
-        let currentChipImg = 'assets/chip_10.png';
         let bets = {};
-        let gameState = 'BETTING'; // BETTING or SPINNING
+        let gameState = 'BETTING';
         let timerVal = 10;
         let timerInterval;
 
-        // --- INIT ---
         window.onload = () => {
-            initGrid();
+            createGrid();
             startTimer();
         };
 
-        function initGrid() {
-            const grid = document.getElementById('grid');
-            // Generate 36 Number Spots
+        // --- GRID GENERATION (1-36) ---
+        function createGrid() {
+            const grid = document.getElementById('numGrid');
+            // Standard Roulette Layout logic:
+            // Col 1: 3, 6, 9... (Top row visually if rotated) - Actually let's assume standard vertical list
+            // Row 1: 1, 2, 3
+            // Row 2: 4, 5, 6 ...
             for(let i=1; i<=36; i++) {
                 const div = document.createElement('div');
                 div.className = 'click-zone';
-                // div.style.border = '1px solid rgba(255,255,255,0.1)'; // Debug
+                // div.style.border = '1px solid rgba(255,255,255,0.2)'; // Uncomment to debug grid
                 div.onclick = function() { placeBet(i, this); };
                 grid.appendChild(div);
             }
         }
 
-        // --- TIMER LOGIC ---
+        // --- CHIP SELECTOR LOGIC ---
+        function changeChip(dir) {
+            chipIndex += dir;
+            // Loop functionality
+            if(chipIndex >= chips.length) chipIndex = 0;
+            if(chipIndex < 0) chipIndex = chips.length - 1;
+
+            const img = document.getElementById('activeChipImg');
+            // Remove animation class to restart it
+            img.classList.remove('chip-anim');
+            void img.offsetWidth; // Trigger reflow
+            
+            img.src = chipFiles[chipIndex];
+            img.classList.add('chip-anim');
+        }
+
+        // --- BETTING LOGIC ---
+        function placeBet(target, el) {
+            if(gameState !== 'BETTING') return;
+            const amount = chips[chipIndex];
+            
+            if(balance < amount) { alert("Insufficient Balance"); return; }
+
+            // Update Logic
+            balance -= amount;
+            currentBet += amount;
+            
+            if(!bets[target]) bets[target] = 0;
+            bets[target] += amount;
+
+            updateUI();
+
+            // Add Chip to Table
+            const chip = document.createElement('img');
+            chip.src = chipFiles[chipIndex];
+            chip.className = 'chip-placed';
+            // Slight offset for realism
+            chip.style.transform = `translate(-50%, -50%) translate(${Math.random()*6-3}px, ${Math.random()*6-3}px)`;
+            
+            el.appendChild(chip);
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = balance;
+            document.getElementById('totalBet').innerText = currentBet;
+        }
+
+        // --- TIMER & GAME LOOP ---
         function startTimer() {
             gameState = 'BETTING';
             timerVal = 10;
+            
+            // Clean UI
             document.getElementById('wheelView').classList.remove('show');
             document.getElementById('winModal').style.transform = "translate(-50%, -50%) scale(0)";
-            
-            // Clear Chips from Table
             document.querySelectorAll('.chip-placed').forEach(c => c.remove());
             bets = {};
             currentBet = 0;
-            document.getElementById('totalBet').innerText = "0";
+            updateUI();
 
             updateTimerUI();
 
             timerInterval = setInterval(() => {
                 timerVal--;
                 updateTimerUI();
-
                 if(timerVal <= 0) {
                     clearInterval(timerInterval);
-                    startSpinSequence();
+                    spinWheel();
                 }
             }, 1000);
         }
@@ -291,83 +320,36 @@
             const circle = document.querySelector('.timer-circle');
             
             text.innerText = timerVal;
-            
-            // Progress Circle Logic (125 is circumference approx)
             const offset = 125 - (timerVal / 10) * 125;
             circle.style.strokeDashoffset = offset;
 
-            if(timerVal <= 3) {
-                badge.classList.add('timer-danger');
-            } else {
-                badge.classList.remove('timer-danger');
-            }
-        }
-
-        // --- BETTING LOGIC ---
-        function setChip(val, img, el) {
-            currentChip = val;
-            currentChipImg = img;
-            document.querySelectorAll('.chip-selector').forEach(x => x.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function scrollChips(dir) {
-            const stack = document.getElementById('chipStack');
-            stack.scrollBy({ top: dir * 50, behavior: 'smooth' });
-        }
-
-        function placeBet(target, el) {
-            if(gameState !== 'BETTING') return;
-            if(balance < currentChip) { alert("Low Balance"); return; }
-
-            // Update Math
-            balance -= currentChip;
-            currentBet += currentChip;
-            
-            if(!bets[target]) bets[target] = 0;
-            bets[target] += currentChip;
-
-            updateUI();
-
-            // Visual Chip
-            const chip = document.createElement('img');
-            chip.src = currentChipImg;
-            chip.className = 'chip-placed';
-            // Random Scatter for realism
-            chip.style.transform = `translate(-50%, -50%) translate(${Math.random()*5-2}px, ${Math.random()*5-2}px)`;
-            el.appendChild(chip);
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = balance;
-            document.getElementById('totalBet').innerText = currentBet;
+            if(timerVal <= 3) badge.classList.add('timer-danger');
+            else badge.classList.remove('timer-danger');
         }
 
         // --- SPIN LOGIC ---
-        function startSpinSequence() {
+        function spinWheel() {
             gameState = 'SPINNING';
-            
-            // Show Wheel Overlay
             document.getElementById('wheelView').classList.add('show');
 
-            const spinner = document.getElementById('spinner');
-            const ball = document.getElementById('ball');
-            const result = Math.floor(Math.random() * 37);
+            const s = document.getElementById('spinner');
+            const b = document.getElementById('ball');
+            const res = Math.floor(Math.random() * 37);
 
-            // Wheel Animation
+            // Wheel Spin
             const deg = 1440 + Math.random() * 360;
-            spinner.style.transform = `rotate(${deg}deg)`;
+            s.style.transition = "transform 4s cubic-bezier(0.1, 0.8, 0.1, 1)";
+            s.style.transform = `rotate(${deg}deg)`;
 
-            // Ball Animation
-            ball.style.display = 'block';
-            ball.animate([
+            // Ball Spin
+            b.style.display = 'block';
+            b.animate([
                 { transform: 'rotate(0deg) translateY(100px)' },
-                { transform: `rotate(-${deg + 120}deg) translateY(60px)` }
+                { transform: `rotate(-${deg+140}deg) translateY(65px)` }
             ], { duration: 4000, easing: 'cubic-bezier(0.2,0.8,0.1,1)', fill: 'forwards' });
 
-            // Result after 4.5s
             setTimeout(() => {
-                showWin(result);
+                showWin(res);
             }, 4500);
         }
 
@@ -376,23 +358,19 @@
             document.getElementById('winVal').innerText = num;
             modal.style.transform = "translate(-50%, -50%) scale(1)";
 
-            // Calculate Win
-            let winAmount = 0;
-            if(bets[num]) winAmount += bets[num] * 36;
-            // Add Color logic here if needed
-
-            if(winAmount > 0) {
-                balance += winAmount;
+            // Simple Payout Logic (Number match only for demo)
+            let win = 0;
+            if(bets[num]) win = bets[num] * 36;
+            
+            if(win > 0) {
+                balance += win;
                 updateUI();
-                // You can add a floating text animation here
             }
 
-            // Restart Game Loop after 3 seconds
-            setTimeout(() => {
-                startTimer();
-            }, 3000);
+            setTimeout(startTimer, 3000);
         }
 
     </script>
 </body>
 </html>
+
