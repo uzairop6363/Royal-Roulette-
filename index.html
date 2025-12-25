@@ -3,317 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Roulette - Fixed</title>
+    <title>Casino Royal - Real Logic</title>
     <style>
         /* --- CORE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            background: #000;
+            background: #1a0505; /* Dark Maroon Base */
             font-family: 'Segoe UI', sans-serif;
             height: 100vh; width: 100vw;
-            overflow: hidden; /* Body scroll band, sirf table scroll karega */
+            overflow: hidden;
             display: flex; flex-direction: column;
         }
 
-        /* --- LOADING SCREEN --- */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000 url('assets/poster_roulette.jpg') no-repeat center/cover;
-            z-index: 9999; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 80px; transition: opacity 0.5s;
-        }
-        .loading-bar { width: 200px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; width: 0%; background: gold; transition: width 0.1s; }
-
-        /* --- 1. WHEEL SECTION (TOP FIXED) --- */
-        .wheel-section {
-            height: 240px; /* Fixed height, taake screen na bhare */
-            width: 100%;
-            background: radial-gradient(circle at center, #2e1000, #000);
-            border-bottom: 2px solid gold;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 20;
-            flex-shrink: 0; /* Isay pichakne se roko */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-        }
-        
-        .wheel-group { position: relative; width: 200px; height: 200px; }
-        .wheel-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .spinner { transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); }
-        .ball { 
-            position: absolute; top: 12%; left: 50%; width: 10px; height: 10px; 
-            background: white; border-radius: 50%; box-shadow: 0 0 5px white; 
-            z-index: 5; display: none; 
-        }
-        .pointer {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid gold; z-index: 10;
+        /* --- 1. FULL SCREEN TABLE (BETTING VIEW) --- */
+        .table-view {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            background: url('assets/table_dark.jpg') no-repeat center/100% 100%; /* YOUR NEW DARK IMAGE */
+            z-index: 10;
+            transition: filter 0.5s ease; /* Blur effect ke liye */
         }
 
-        /* --- 2. TABLE SECTION (SCROLLABLE BEHIND CHIPS) --- */
-        .table-section {
-            flex-grow: 1; /* Bachi hui jagah lega */
-            position: relative;
-            background: #003311;
-            overflow-y: auto; /* Scroll ON */
-            overflow-x: hidden;
-            /* Bottom padding zaroori hai taake last numbers chips ke peeche na chupen */
-            padding-bottom: 140px; 
-        }
-
-        .table-container {
-            width: 100%;
-            position: relative;
-        }
-        .table-bg { width: 100%; display: block; }
-
-        /* Grid Setup */
-        .grid-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        /* Grid System to match the Reference Image (Left Sidebar + Numbers) */
+        .grid-container {
+            position: absolute; 
+            top: 15%; /* Adjust based on where grid starts in image */
+            left: 5%; 
+            width: 90%; 
+            height: 65%; /* Grid height */
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            /* Padding ko adjust karein apni image ke hisaab se */
-            padding: 13% 4% 25% 4%; 
-            grid-auto-rows: 1fr;
+            grid-template-columns: 15% 1fr 1fr 1fr; /* Left Sidebar + 3 Col Numbers */
             gap: 2px;
         }
-        .bet-box { position: relative; }
 
-        /* 0 Zone */
-        .spot-0 { position: absolute; top: 0; left: 0; width: 100%; height: 11%; z-index: 5; }
-
-        /* Color Zones */
-        .side-bets-area {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 25%;
-            display: flex;
-        }
-        .bet-red { width: 50%; height: 100%; }
-        .bet-black { width: 50%; height: 100%; }
-
+        .click-zone { position: relative; } /* Transparent Click Box */
+        
+        /* Left Sidebar Bets (1st 12, 2nd 12, etc) */
+        .side-col { grid-column: 1; grid-row: span 4; border: 1px solid rgba(255,215,0,0.1); }
+        
+        /* Chips Logic */
         .chip {
-            position: absolute; top: 50%; left: 50%; width: 30px; height: 30px;
+            position: absolute; top: 50%; left: 50%; width: 28px; height: 28px;
             transform: translate(-50%, -50%) scale(0);
             animation: popIn 0.2s forwards; pointer-events: none;
-            filter: drop-shadow(0 2px 2px #000);
-            z-index: 10;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.8));
+            z-index: 20;
         }
         @keyframes popIn { to { transform: translate(-50%, -50%) scale(1); } }
 
-        /* --- 3. CONTROLS (FLOATING/FIXED BOTTOM) --- */
-        /* Ye 'absolute' hai, taake ye screen ke upar float kare */
-        .controls-overlay {
-            position: absolute; 
-            bottom: 0; left: 0; 
-            width: 100%;
-            height: 130px;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 70%, transparent);
-            z-index: 100; /* Sabse upar */
+        /* --- 2. WHEEL OVERLAY (HIDDEN INITIALLY) --- */
+        .wheel-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); /* Dark dimming background */
+            z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; /* Click through when hidden */
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Active Class to Show Wheel */
+        .wheel-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .wheel-stage {
+            position: relative; width: 320px; height: 320px;
+            transform: scale(0.8); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .wheel-overlay.show .wheel-stage { transform: scale(1); }
+
+        .wheel-outer { position: absolute; top:0; left:0; width:100%; height:100%; }
+        .wheel-spinner { 
+            position: absolute; top:11%; left:11%; width:78%; height:78%; 
+            transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1);
+        }
+        .ball {
+            position: absolute; top: 12%; left: 50%; width: 12px; height: 12px;
+            background: #fff; border-radius: 50%; box-shadow: 0 0 8px #fff;
+            display: none;
+        }
+        .pointer {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid gold;
+            z-index: 10; filter: drop-shadow(0 2px 2px #000);
+        }
+
+        /* --- 3. UI CONTROLS (FLOATING) --- */
+        .ui-layer {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 140px;
+            pointer-events: none; /* Let clicks pass through empty areas */
+            z-index: 50;
             display: flex; flex-direction: column; justify-content: flex-end;
             padding: 10px;
-            pointer-events: none; /* Click through transparent parts */
+            background: linear-gradient(to top, #000 50%, transparent);
         }
 
-        /* Clickable elements ko wapis pointer-events all denge */
-        .balance-float, .chip-rack, .action-row { pointer-events: auto; }
+        .active-ui { pointer-events: auto; } /* Buttons clickable */
 
-        /* Balance */
-        .balance-float {
-            position: absolute; top: 20px; left: 15px;
-            background: rgba(0,0,0,0.8); border: 1px solid gold; border-radius: 20px;
-            padding: 5px 15px; color: gold; font-weight: bold; font-size: 14px;
-            box-shadow: 0 4px 5px rgba(0,0,0,0.5);
+        /* Chips Rack */
+        .chips-rack {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;
         }
-
-        /* Chips */
-        .chip-rack {
-            display: flex; justify-content: center; gap: 10px;
-            align-items: center; margin-bottom: 5px;
-            pointer-events: auto;
+        .chip-btn {
+            width: 55px; height: 55px; cursor: pointer; transition: 0.2s;
+            filter: drop-shadow(0 5px 5px #000);
         }
-        .chip-btn { 
-            width: 50px; height: 50px; cursor: pointer; transition: 0.2s; 
-        }
-        .chip-btn.active { transform: translateY(-10px) scale(1.15); filter: drop-shadow(0 0 8px gold); }
+        .chip-btn.selected { transform: translateY(-10px) scale(1.15); filter: drop-shadow(0 0 10px gold); }
         .chip-btn img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Spin Button */
-        .action-row {
-            position: absolute; bottom: 15px; right: 15px;
-            display: flex; gap: 10px; align-items: flex-end;
-        }
-        .spin-btn {
-            width: 80px; height: 80px;
-            background: url('assets/btn_spin.png') no-repeat center/contain;
-            border: none; cursor: pointer;
-            filter: drop-shadow(0 4px 4px #000);
-        }
-        .spin-btn:active { transform: scale(0.95); }
-        .clear-btn {
-            width: 45px; height: 45px;
-            background: url('assets/btn_clear.png') no-repeat center/contain;
-            border: none; cursor: pointer; margin-bottom: 5px;
+        /* Bottom Bar (Balance & Spin) */
+        .bottom-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px;
         }
 
-        /* Win Popup */
-        .win-modal {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 250px; height: 120px;
-            background: url('assets/win_popup.png') no-repeat center/contain;
+        .balance-box {
+            background: rgba(0,0,0,0.8); border: 1px solid gold; border-radius: 50px;
+            padding: 8px 20px; color: gold; font-weight: bold; font-size: 16px;
+        }
+
+        .spin-btn {
+            width: 90px; height: 90px;
+            background: url('assets/btn_spin.png') no-repeat center/contain;
+            border: none; cursor: pointer;
+            filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));
+        }
+        .spin-btn:active { transform: scale(0.95); }
+
+        /* Win Popup (Big & Center) */
+        .win-popup {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(0,0,0,0.95), transparent);
+            border: 2px solid gold; border-radius: 20px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 200; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
         }
-        .win-num { font-size: 50px; color: white; font-weight: 900; text-shadow: 0 0 10px gold; margin:0; }
+        .win-num { font-size: 100px; color: gold; font-weight: 900; margin: 0; text-shadow: 0 0 20px red; }
+        .win-msg { color: #fff; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
 
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <h3 style="color:gold;">LOADING...</h3>
-        <div class="loading-bar"><div class="bar-fill" id="bar"></div></div>
+    <div class="table-view" id="tableView">
+        <div class="grid-container" id="gridLayer">
+            <div class="click-zone side-col" onclick="placeBet('1st12', this)"></div>
+            <div class="click-zone side-col" onclick="placeBet('2nd12', this)"></div>
+            <div class="click-zone side-col" onclick="placeBet('3rd12', this)"></div>
+            
+            </div>
     </div>
 
-    <div class="game-wrapper" id="game">
+    <div class="wheel-overlay" id="wheelView">
+        <div class="wheel-stage">
+            <div class="pointer"></div>
+            <img src="assets/wheel_outer.png" class="wheel-outer">
+            <img src="assets/wheel_spinner.png" class="wheel-spinner" id="spinner">
+            <div class="ball" id="ball"></div>
+        </div>
         
-        <div class="wheel-section">
-            <div class="wheel-group">
-                <div class="pointer"></div>
-                <img src="assets/wheel_outer.png" class="wheel-img">
-                <img src="assets/wheel_spinner.png" class="wheel-img spinner" id="spinner">
-                <div class="ball" id="ball"></div>
-            </div>
-            <div class="win-modal" id="winModal">
-                <div class="win-num" id="winVal">0</div>
-            </div>
+        <div class="win-popup" id="winModal">
+            <div class="win-num" id="winVal">0</div>
+            <div class="win-msg">WINNER</div>
+        </div>
+    </div>
+
+    <div class="ui-layer">
+        
+        <div class="chips-rack active-ui">
+            <div class="chip-btn selected" onclick="setChip(10, 'assets/chip_10.png', this)"><img src="assets/chip_10.png"></div>
+            <div class="chip-btn" onclick="setChip(50, 'assets/chip_50.png', this)"><img src="assets/chip_50.png"></div>
+            <div class="chip-btn" onclick="setChip(100, 'assets/chip_100.png', this)"><img src="assets/chip_100.png"></div>
+            <div class="chip-btn" onclick="setChip(500, 'assets/chip_500.png', this)"><img src="assets/chip_500.png"></div>
+            <div class="chip-btn" onclick="setChip(1000, 'assets/chip_1k.png', this)"><img src="assets/chip_1k.png"></div>
         </div>
 
-        <div class="table-section">
-            <div class="table-container">
-                <img src="assets/table_layout.jpg" class="table-bg">
-                
-                <div class="spot-0" onclick="placeBet(0, this)"></div>
-
-                <div class="grid-layer" id="grid"></div>
-
-                <div class="side-bets-area">
-                    <div class="bet-red" onclick="placeBet('red', this)"></div>
-                    <div class="bet-black" onclick="placeBet('black', this)"></div>
-                </div>
-            </div>
+        <div class="bottom-bar active-ui">
+            <div class="balance-box">PKR <span id="balance">50000</span></div>
+            <button class="spin-btn" onclick="startSpinSequence()"></button>
         </div>
-
-        <div class="controls-overlay">
-            <div class="balance-float">
-                <span>PKR</span> <span id="balance">50000</span>
-            </div>
-
-            <div class="chip-rack">
-                <div class="chip-btn active" onclick="setChip(10, 'assets/chip_10.png', this)"><img src="assets/chip_10.png"></div>
-                <div class="chip-btn" onclick="setChip(50, 'assets/chip_50.png', this)"><img src="assets/chip_50.png"></div>
-                <div class="chip-btn" onclick="setChip(100, 'assets/chip_100.png', this)"><img src="assets/chip_100.png"></div>
-                <div class="chip-btn" onclick="setChip(500, 'assets/chip_500.png', this)"><img src="assets/chip_500.png"></div>
-                <div class="chip-btn" onclick="setChip(1000, 'assets/chip_1k.png', this)"><img src="assets/chip_1k.png"></div>
-            </div>
-
-            <div class="action-row">
-                <button class="clear-btn" onclick="clearTable()"></button>
-                <button class="spin-btn" onclick="spin()"></button>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // --- LOGIC ---
-        window.onload = () => {
-            let w=0; const b=document.getElementById('bar');
-            const t=setInterval(()=>{ w+=2; b.style.width=w+'%'; if(w>=100){ clearInterval(t); document.getElementById('loader').style.display='none'; document.getElementById('game').classList.add('active'); } }, 20);
-            initGrid();
-        };
-
         let balance = 50000;
         let currentChip = 10;
         let currentChipImg = 'assets/chip_10.png';
         let bets = {};
-        let isSpinning = false;
-        const redNums = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-
-        function initGrid() {
-            const g = document.getElementById('grid');
-            for(let i=1; i<=36; i++) {
-                const d = document.createElement('div');
-                d.className = 'bet-box';
-                d.onclick = function() { placeBet(i, this); };
-                g.appendChild(d);
-            }
+        
+        // --- INIT GRID ---
+        // Creating a simple grid 3 columns x 12 rows for numbers 1-36
+        const grid = document.getElementById('gridLayer');
+        
+        // Note: You need to align this loop with your Image layout.
+        // Assuming Standard layout: 3, 6, 9... (Right Col), 2, 5, 8... (Mid), 1, 4, 7... (Left)
+        // Or sequential 1,2,3.
+        // Let's create generic spots. You can tweak CSS Grid to align perfectly with your background.
+        
+        for(let i=1; i<=36; i++) {
+            const spot = document.createElement('div');
+            spot.className = 'click-zone';
+            spot.style.border = '1px dashed rgba(255,255,255,0.05)'; // Remove border after testing
+            spot.onclick = function() { placeBet(i, this); };
+            grid.appendChild(spot);
         }
 
-        function setChip(v, i, e) {
-            currentChip = v; currentChipImg = i;
-            document.querySelectorAll('.chip-btn').forEach(x => x.classList.remove('active'));
-            e.classList.add('active');
+        function setChip(val, img, el) {
+            currentChip = val; currentChipImg = img;
+            document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
         }
 
         function placeBet(target, el) {
-            if(isSpinning || balance < currentChip) return;
+            if(balance < currentChip) return;
             balance -= currentChip;
             document.getElementById('balance').innerText = balance;
             
-            if(!bets[target]) bets[target]=0; 
+            if(!bets[target]) bets[target] = 0;
             bets[target] += currentChip;
 
-            const c = document.createElement('img');
-            c.src = currentChipImg; c.className = 'chip';
-            c.style.transform = `translate(-50%, -50%) translate(${Math.random()*6-3}px, ${Math.random()*6-3}px)`;
-            el.appendChild(c);
+            const chip = document.createElement('img');
+            chip.src = currentChipImg;
+            chip.className = 'chip';
+            // Stacking Logic
+            const offset = bets[target] > currentChip ? -5 : 0;
+            chip.style.transform = `translate(-50%, -50%) translateY(${offset}px)`;
+            
+            el.appendChild(chip);
         }
 
-        function clearTable() {
-            if(isSpinning) return;
-            document.querySelectorAll('.chip').forEach(c => c.remove());
-            bets = {};
-        }
+        function startSpinSequence() {
+            if(Object.keys(bets).length === 0) { alert("Place a bet!"); return; }
 
-        function spin() {
-            if(isSpinning || Object.keys(bets).length===0) return;
-            isSpinning = true;
-            document.getElementById('winModal').style.transform = "translate(-50%, -50%) scale(0)";
+            // 1. Show Wheel Overlay
+            const wheelView = document.getElementById('wheelView');
+            const tableView = document.getElementById('tableView');
+            const winModal = document.getElementById('winModal');
+            
+            winModal.style.transform = "translate(-50%, -50%) scale(0)"; // Reset Modal
+            wheelView.classList.add('show');
+            tableView.style.filter = "blur(5px)"; // Blur background table
 
-            const s = document.getElementById('spinner');
+            // 2. Spin Logic
+            const spinner = document.getElementById('spinner');
             const ball = document.getElementById('ball');
-            const res = Math.floor(Math.random() * 37);
-            
-            const deg = 1440 + Math.random()*360;
-            s.style.transform = `rotate(${deg}deg)`;
-            
+            const result = Math.floor(Math.random() * 37);
+
+            const deg = 1440 + Math.random() * 360;
+            spinner.style.transform = `rotate(${deg}deg)`;
+
             ball.style.display = 'block';
             ball.animate([
-                { transform: 'rotate(0deg) translateY(85px)' },
-                { transform: `rotate(-${deg+120}deg) translateY(50px)` }
+                { transform: 'rotate(0deg) translateY(100px)' },
+                { transform: `rotate(-${deg+150}deg) translateY(60px)` }
             ], { duration: 4000, easing: 'cubic-bezier(0.2,0.8,0.1,1)', fill: 'forwards' });
 
-            setTimeout(() => { checkWin(res); isSpinning = false; }, 4200);
-        }
-
-        function checkWin(n) {
-            const m = document.getElementById('winModal');
-            document.getElementById('winVal').innerText = n;
-            m.style.transform = "translate(-50%, -50%) scale(1)";
-            
-            let win = 0;
-            if(bets[n]) win += bets[n]*36;
-            let col = (n!==0 && redNums.includes(n)) ? 'red' : 'black';
-            if(bets[col]) win += bets[col]*2;
-
-            if(win > 0) {
-                balance += win;
+            // 3. Show Result & Close
+            setTimeout(() => {
+                // Show Win Modal
+                document.getElementById('winVal').innerText = result;
+                winModal.style.transform = "translate(-50%, -50%) scale(1)";
+                
+                // Calculate Winnings (Simplified)
+                let win = 0;
+                if(bets[result]) win = bets[result] * 36;
+                if(win > 0) balance += win;
                 document.getElementById('balance').innerText = balance;
-                setTimeout(() => alert(`YOU WON PKR ${win}!`), 500);
-            }
-            
-            setTimeout(() => { clearTable(); m.style.transform = "translate(-50%, -50%) scale(0)"; }, 3000);
+
+                // Close after 3 seconds
+                setTimeout(() => {
+                    wheelView.classList.remove('show');
+                    tableView.style.filter = "none";
+                    
+                    // Clear Table
+                    document.querySelectorAll('.chip').forEach(c => c.remove());
+                    bets = {};
+                    
+                }, 3000);
+
+            }, 4200);
         }
+
     </script>
 </body>
 </html>
