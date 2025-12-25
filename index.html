@@ -3,237 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Roulette - Masterpiece</title>
+    <title>Royal Roulette - Pro</title>
     <style>
-        /* --- 1. CORE SETTINGS --- */
+        /* --- 1. CORE & RESET --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            background-color: #050505;
-            font-family: 'Segoe UI', serif;
+            background-color: #0d0d0d;
+            font-family: 'Segoe UI', sans-serif;
             height: 100vh; width: 100vw;
             overflow: hidden;
-            display: flex; flex-direction: column; align-items: center;
-            user-select: none; -webkit-user-select: none;
+            display: flex; flex-direction: column;
+            /* Rich Casino Background */
+            background: radial-gradient(circle at center, #2b0000 0%, #000 100%);
         }
 
-        /* --- LOADING SCREEN --- */
+        /* --- LOADING SCREEN (Keep existing logic) --- */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #000;
-            background-image: url('assets/poster_roulette.jpg'); 
-            background-size: cover; background-position: center;
-            z-index: 9999;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 80px;
-            transition: opacity 0.8s ease-out;
+            background: #000 url('assets/poster_roulette.jpg') no-repeat center/cover;
+            z-index: 9999; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 80px; transition: opacity 0.8s ease-out;
         }
-
-        .loading-text {
-            color: #ffd700; font-size: 18px; font-weight: bold; margin-bottom: 10px;
-            text-shadow: 0 2px 5px #000; letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
         .progress-container {
-            width: 80%; max-width: 320px; height: 35px;
-            background-image: url('assets/frame_roulette.png');
-            background-size: 100% 100%; background-repeat: no-repeat;
-            display: flex; align-items: center; padding: 0 6px;
-            box-sizing: border-box; filter: drop-shadow(0 5px 10px #000);
+            width: 70%; height: 20px; border: 1px solid gold; border-radius: 10px;
+            background: rgba(0,0,0,0.8); overflow: hidden;
         }
+        .progress-fill { height: 100%; width: 0%; background: gold; transition: width 0.1s linear; }
 
-        .progress-fill {
-            height: 60%; width: 0%;
-            background: linear-gradient(90deg, #ff0000, #b22222, #ffd700);
-            border-radius: 4px; transition: width 0.1s linear;
-            box-shadow: 0 0 10px red;
-        }
-
-        /* --- 2. GAME WRAPPER --- */
+        /* --- 2. GAME LAYOUT --- */
         .game-wrapper {
             position: relative; width: 100%; height: 100%;
-            max-width: 500px;
-            background-color: #0a3318; 
             display: flex; flex-direction: column;
-            opacity: 0; transition: opacity 1.5s ease-in;
+            opacity: 0; transition: opacity 1s ease-in;
         }
         .game-wrapper.active { opacity: 1; }
 
-        /* --- 3. WHEEL SECTION (FIXED TOP) --- */
-        .wheel-area {
-            height: 38%; /* Takes top part of screen */
+        /* --- TOP: WHEEL AREA (35%) --- */
+        .wheel-section {
+            height: 35%;
+            width: 100%;
             position: relative;
-            background: radial-gradient(circle, #2b1304 0%, #000 90%);
             display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
-            z-index: 20;
-            border-bottom: 2px solid gold;
+            /* Shine Effect behind wheel */
+            background: radial-gradient(circle, rgba(255,215,0,0.15) 0%, transparent 70%);
+            z-index: 10;
         }
 
-        .wheel-container {
+        .wheel-group {
             position: relative;
-            width: 280px; height: 280px;
+            width: 260px; height: 260px;
+            /* Drop shadow for 3D depth */
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
         }
 
-        /* Static Rim */
         .wheel-outer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 2; pointer-events: none;
         }
 
-        /* Rotating Part */
         .wheel-spinner {
-            position: absolute; top: 12%; left: 12%; width: 76%; height: 76%;
-            z-index: 1;
-            transition: transform 4s cubic-bezier(0.2, 0.8, 0.1, 1);
+            position: absolute; top: 11%; left: 11%; width: 78%; height: 78%;
+            z-index: 1; transition: transform 4s cubic-bezier(0.2, 0.8, 0.1, 1);
         }
 
-        /* The Ball */
         .ball {
-            position: absolute; top: 13%; left: 50%;
-            width: 14px; height: 14px;
-            z-index: 3;
-            transform-origin: 0 100px; /* Orbit Radius */
-            display: none;
+            position: absolute; top: 12%; left: 50%; width: 12px; height: 12px;
+            background: white; border-radius: 50%; box-shadow: 0 0 5px white;
+            z-index: 3; display: none;
         }
 
-        /* Pointer (Triangle at top) */
         .pointer {
-            position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 20px solid gold;
+            position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 40px;
+            background: linear-gradient(to bottom, gold, #b8860b);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
             z-index: 5; filter: drop-shadow(0 2px 2px #000);
         }
 
-        /* Win Popup */
-        .winning-overlay {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 250px; height: 120px;
-            background: url('assets/win_popup.png') no-repeat center/contain;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 50; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .winning-number {
-            font-size: 50px; font-weight: 900; color: #fff; 
-            text-shadow: 0 2px 0 #000, 0 0 15px gold;
-            margin-top: 15px; font-family: 'Arial Black', sans-serif;
-        }
-
-        /* --- 4. TABLE SECTION (SCROLLABLE) --- */
-        .table-area {
+        /* --- MIDDLE: TABLE AREA (45%) --- */
+        .table-section {
             flex-grow: 1;
             position: relative;
-            overflow-y: auto; /* Scroll enabled */
-            background-color: #0b4421;
-            /* Hide Scrollbar */
-            scrollbar-width: none; -ms-overflow-style: none;
-        }
-        .table-area::-webkit-scrollbar { display: none; }
-
-        .table-content {
-            position: relative;
             width: 100%;
-            /* Extra padding bottom so content isn't hidden behind controls */
-            padding-bottom: 120px; 
+            overflow-y: auto; /* Scrollable Table */
+            overflow-x: hidden;
+            background: #003300; /* Fallback Green */
+            border-top: 3px solid #b8860b;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
+        }
+        
+        .table-container {
+            width: 100%;
+            /* Maintain Aspect Ratio of your image roughly */
+            min-height: 600px; 
+            position: relative;
         }
 
-        .table-img { width: 100%; display: block; }
+        .table-img {
+            width: 100%; height: 100%;
+            display: block; object-fit: fill;
+        }
 
-        /* CLICK GRID */
-        .grid-overlay {
+        /* Grid Overlay - Perfectly aligned to your image */
+        .grid-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: grid;
-            /* 3 Columns Layout */
-            grid-template-columns: repeat(3, 1fr);
-            /* Auto rows of approx 50-60px depending on your image */
-            grid-auto-rows: 55px; 
-            padding: 60px 15px 20px 15px; /* Adjust top padding to skip '0' area if needed */
-            box-sizing: border-box;
+            /* 3 Columns + Padding sides */
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 13% 5% 15% 5%; /* Adjust these % to fit image borders */
+            grid-auto-rows: 1fr;
+            gap: 2px;
         }
 
-        /* Invisible Hit Zones */
-        .bet-spot {
+        .bet-box {
             position: relative;
-            /* border: 1px solid rgba(255,255,255,0.1); Debugging Border */
+            /* border: 1px dashed rgba(255,255,255,0.1);  Debug Border */
         }
-        
-        /* Special Zones Positioning (Adjust based on your image) */
-        .spot-0 { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 60px; 
-            z-index: 5;
-        }
-        
-        /* Red/Black/Even/Odd usually at bottom or side. 
-           Assuming bottom of numbers for mobile layout */
-        .side-bets {
-            position: absolute; bottom: 20px; left: 0; width: 100%; height: 150px;
-            display: flex; flex-wrap: wrap;
-        }
-        .side-spot {
-            width: 50%; height: 50px;
-            /* border: 1px solid yellow; Debug */
-            position: absolute;
-        }
-        
-        /* Adjust these coordinates to match your 'table_layout.jpg' */
-        .bet-red { bottom: 80px; left: 10%; width: 35%; height: 60px; }
-        .bet-black { bottom: 80px; right: 10%; width: 35%; height: 60px; }
 
-        /* Chips on Table */
-        .chip-placed {
+        /* Chip on Table Styling */
+        .chip {
             position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 30px; height: 30px;
+            width: 35px; height: 35px;
+            transform: translate(-50%, -50%) scale(0);
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.6));
+            animation: chipPop 0.2s forwards;
             pointer-events: none;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
-            animation: chip-drop 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        @keyframes chip-drop { from { transform: translate(-50%, -150%) scale(1.5); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        @keyframes chipPop { to { transform: translate(-50%, -50%) scale(1); } }
 
-        /* --- 5. CONTROLS (FIXED BOTTOM) --- */
-        .controls-area {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 130px;
-            background: linear-gradient(to top, #000 80%, transparent);
-            z-index: 100;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            padding-bottom: 10px;
-        }
-
-        .balance-display {
-            position: absolute; top: 10px; left: 20px;
-            color: #ffd700; font-size: 18px; font-weight: bold;
-            text-shadow: 0 1px 2px #000;
-            background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px;
-            border: 1px solid #ffd700;
+        /* --- BOTTOM: CONTROLS HUD (20%) --- */
+        .hud-section {
+            height: 120px;
+            width: 100%;
+            background: linear-gradient(to top, #1a0500, #3d0e00);
+            border-top: 2px solid gold;
+            display: flex; flex-direction: column; justify-content: center;
+            position: relative; z-index: 50;
+            padding: 5px 10px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
         }
 
-        /* Chips Scroll */
-        .chips-rack {
-            display: flex; justify-content: center; gap: 12px;
-            margin-bottom: 15px;
-            padding: 0 10px;
-            overflow-x: auto; /* Allow side scroll if needed */
+        /* Balance Badge */
+        .balance-badge {
+            position: absolute; top: -25px; left: 20px;
+            background: linear-gradient(90deg, #000, #333);
+            border: 2px solid gold; border-radius: 20px;
+            padding: 5px 20px; color: gold; font-weight: bold; font-size: 16px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            display: flex; gap: 5px;
         }
-        .chips-rack::-webkit-scrollbar { display: none; }
 
+        /* Chips Rack */
+        .chip-rack {
+            display: flex; justify-content: center; gap: 15px;
+            align-items: center; margin-bottom: 10px;
+        }
         .chip-btn {
-            width: 55px; height: 55px; flex-shrink: 0; cursor: pointer;
-            transition: transform 0.2s;
+            width: 55px; height: 55px; cursor: pointer;
+            transition: transform 0.2s; position: relative;
         }
-        .chip-btn.selected { transform: translateY(-15px) scale(1.15); z-index: 10; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.5)); }
-        .chip-btn img { width: 100%; height: 100%; object-fit: contain; }
-
-        /* Action Buttons */
-        .action-btns {
-            position: absolute; bottom: 35px; right: 20px;
-            display: flex; gap: 10px; align-items: flex-end;
+        .chip-btn img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 4px #000); }
+        
+        .chip-btn.active { transform: translateY(-10px) scale(1.15); }
+        .chip-btn.active::after {
+            content: ''; position: absolute; bottom: -5px; left: 10%; width: 80%; height: 10px;
+            background: radial-gradient(ellipse, rgba(255,215,0,0.8), transparent);
+            border-radius: 50%;
         }
 
+        /* Spin Button Area */
+        .actions {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; align-items: flex-end; gap: 10px;
+        }
         .btn-spin {
             width: 90px; height: 90px;
             background: url('assets/btn_spin.png') no-repeat center/contain;
@@ -241,286 +184,210 @@
             filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
             transition: transform 0.1s;
         }
-        .btn-spin:active { transform: scale(0.95); }
+        .btn-spin:active { transform: scale(0.95); filter: brightness(0.8); }
 
         .btn-clear {
             width: 50px; height: 50px;
             background: url('assets/btn_clear.png') no-repeat center/contain;
-            border: none; cursor: pointer;
-            margin-bottom: 10px;
-            transition: transform 0.1s;
+            border: none; cursor: pointer; margin-bottom: 5px;
         }
-        .btn-clear:active { transform: scale(0.9); }
 
-        /* Floating Win Text */
-        .float-win {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #00ff00; font-size: 40px; font-weight: bold; 
-            text-shadow: 0 0 10px #000; pointer-events: none; z-index: 200;
-            animation: floatUp 1.5s forwards;
+        /* Win Popup */
+        .win-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 300px; height: 150px;
+            background: url('assets/win_popup.png') no-repeat center/contain;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes floatUp { to { transform: translate(-50%, -150%); opacity: 0; } }
+        .win-num { font-size: 60px; color: #fff; font-weight: 900; text-shadow: 0 0 10px gold; margin: 0; }
+        .win-text { font-size: 20px; color: gold; font-weight: bold; text-transform: uppercase; margin-top: -5px; }
 
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="loading-text" id="loadStatus">PREPARING TABLE...</div>
-        <div class="progress-container">
-            <div class="progress-fill" id="progressBar"></div>
-        </div>
+        <div style="color:gold; margin-bottom:10px; font-weight:bold;">LOADING CASINO...</div>
+        <div class="progress-container"><div class="progress-fill" id="progressBar"></div></div>
     </div>
 
     <div class="game-wrapper" id="gameScreen">
         
-        <div class="wheel-area">
-            <div class="pointer"></div>
-            <div class="wheel-container">
-                <img src="assets/wheel_outer.png" class="wheel-outer" alt="Rim">
-                <img src="assets/wheel_spinner.png" class="wheel-spinner" id="wheelSpinner" alt="Wheel">
-                <img src="assets/ball.png" class="ball" id="ball" alt="Ball">
-            </div>
-            
-            <div class="winning-overlay" id="winPopup">
-                <div class="winning-number" id="winNumText">0</div>
+        <div class="wheel-section">
+            <div class="wheel-group">
+                <div class="pointer"></div>
+                <img src="assets/wheel_outer.png" class="wheel-outer">
+                <img src="assets/wheel_spinner.png" class="wheel-spinner" id="spinner">
+                <div class="ball" id="ball"></div>
             </div>
         </div>
 
-        <div class="table-area">
-            <div class="table-content">
-                <img src="assets/table_layout.jpg" class="table-img" alt="Table">
+        <div class="win-modal" id="winModal">
+            <div class="win-num" id="winNum">0</div>
+            <div class="win-text">YOU WIN!</div>
+        </div>
+
+        <div class="table-section">
+            <div class="table-container">
+                <img src="assets/table_layout.jpg" class="table-img">
                 
-                <div class="bet-spot spot-0" onclick="placeBet(0, this)"></div>
-
-                <div class="grid-overlay" id="gridOverlay">
+                <div class="grid-layer" id="betGrid">
                     </div>
-
-                <div class="bet-spot bet-red" onclick="placeBet('red', this)"></div>
-                <div class="bet-spot bet-black" onclick="placeBet('black', this)"></div>
             </div>
         </div>
 
-        <div class="controls-area">
-            <div class="balance-display">PKR <span id="balance">50000</span></div>
+        <div class="hud-section">
+            <div class="balance-badge">
+                <span>PKR</span> <span id="balance">50000</span>
+            </div>
 
-            <div class="chips-rack">
-                <div class="chip-btn" onclick="selectChip(10, 'assets/chip_10.png', this)">
+            <div class="chip-rack">
+                <div class="chip-btn active" onclick="setChip(10, 'assets/chip_10.png', this)">
                     <img src="assets/chip_10.png">
                 </div>
-                <div class="chip-btn selected" onclick="selectChip(50, 'assets/chip_50.png', this)">
+                <div class="chip-btn" onclick="setChip(50, 'assets/chip_50.png', this)">
                     <img src="assets/chip_50.png">
                 </div>
-                <div class="chip-btn" onclick="selectChip(100, 'assets/chip_100.png', this)">
+                <div class="chip-btn" onclick="setChip(100, 'assets/chip_100.png', this)">
                     <img src="assets/chip_100.png">
                 </div>
-                <div class="chip-btn" onclick="selectChip(500, 'assets/chip_500.png', this)">
+                <div class="chip-btn" onclick="setChip(500, 'assets/chip_500.png', this)">
                     <img src="assets/chip_500.png">
                 </div>
-                <div class="chip-btn" onclick="selectChip(1000, 'assets/chip_1k.png', this)">
+                <div class="chip-btn" onclick="setChip(1000, 'assets/chip_1k.png', this)">
                     <img src="assets/chip_1k.png">
                 </div>
             </div>
 
-            <div class="action-btns">
-                <button class="btn-clear" onclick="clearBets()"></button>
-                <button class="btn-spin" onclick="spinWheel()"></button>
+            <div class="actions">
+                <button class="btn-clear" onclick="clearTable()"></button>
+                <button class="btn-spin" onclick="spin()"></button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // --- LOADING LOGIC ---
+        // --- LOGIC ---
         window.onload = function() {
+            // Loader
+            let w = 0;
             const bar = document.getElementById('progressBar');
-            const loader = document.getElementById('loader');
-            const status = document.getElementById('loadStatus');
-            const game = document.getElementById('gameScreen');
-            let width = 0;
-
-            const simulateLoading = () => {
-                let jump = Math.floor(Math.random() * 5) + 1;
-                width += jump; if(width > 100) width = 100;
-                bar.style.width = width + '%';
-
-                if(width < 30) status.innerText = "POLISHING WHEEL...";
-                else if(width < 70) status.innerText = "STACKING CHIPS...";
-                else status.innerText = "OPENING CASINO...";
-
-                if (width >= 100) {
-                    setTimeout(() => {
-                        loader.style.opacity = '0';
-                        setTimeout(() => {
-                            loader.style.display = 'none';
-                            game.classList.add('active');
-                            initGrid(); // Build Table
-                        }, 800);
-                    }, 500);
-                } else {
-                    setTimeout(simulateLoading, 50);
+            const int = setInterval(() => {
+                w+=2; bar.style.width = w+'%';
+                if(w>=100) {
+                    clearInterval(int);
+                    document.getElementById('loader').style.opacity=0;
+                    setTimeout(()=> {
+                        document.getElementById('loader').style.display='none';
+                        document.getElementById('gameScreen').classList.add('active');
+                    },800);
                 }
-            };
-            simulateLoading();
+            }, 30);
+            
+            initTable();
         };
 
-        // --- GAME LOGIC ---
         let balance = 50000;
-        let currentChipVal = 50;
-        let currentChipImg = 'assets/chip_50.png';
-        let bets = {}; // Stores placed bets
+        let currentChip = 10;
+        let currentChipImg = 'assets/chip_10.png';
+        let bets = {};
         let isSpinning = false;
 
-        // Roulette Red Numbers
-        const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+        // Roulette Numbers (Simplified Red Set)
+        const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 
-        function initGrid() {
-            const grid = document.getElementById('gridOverlay');
-            // Create spots for 1 to 36
-            // Standard vertical layout is often 3 columns
+        function initTable() {
+            const grid = document.getElementById('betGrid');
+            // Generate 36 Boxes
             for(let i=1; i<=36; i++) {
-                const spot = document.createElement('div');
-                spot.className = 'bet-spot';
-                spot.onclick = function() { placeBet(i, this); };
-                grid.appendChild(spot);
+                const div = document.createElement('div');
+                div.className = 'bet-box';
+                div.onclick = function() { placeBet(i, this); };
+                grid.appendChild(div);
             }
+            // You can manually add 0, Red, Black overlay areas if needed
+            // For now focused on numbers grid
         }
 
-        function selectChip(val, img, el) {
-            currentChipVal = val;
-            currentChipImg = img;
-            document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('selected'));
-            el.classList.add('selected');
+        function setChip(val, img, el) {
+            currentChip = val; currentChipImg = img;
+            document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        function placeBet(target, el) {
+        function placeBet(num, el) {
             if(isSpinning) return;
-            if(balance < currentChipVal) { alert("Insufficient Funds"); return; }
+            if(balance < currentChip) { alert("Low Balance!"); return; }
 
-            // Deduct
-            balance -= currentChipVal;
-            updateUI();
+            balance -= currentChip;
+            document.getElementById('balance').innerText = balance;
 
-            // Store Bet
-            if(!bets[target]) bets[target] = 0;
-            bets[target] += currentChipVal;
+            if(!bets[num]) bets[num] = 0;
+            bets[num] += currentChip;
 
-            // Visual Chip
             const chip = document.createElement('img');
             chip.src = currentChipImg;
-            chip.className = 'chip-placed';
-            
-            // Stack randomization
-            const rx = Math.random() * 10 - 5;
-            const ry = Math.random() * 10 - 5;
-            chip.style.transform = `translate(-50%, -50%) translate(${rx}px, ${ry}px)`;
-            
+            chip.className = 'chip';
+            // Random offset for realism
+            chip.style.transform = `translate(-50%, -50%) translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
             el.appendChild(chip);
         }
 
-        function clearBets() {
+        function clearTable() {
             if(isSpinning) return;
-            // Refund (optional in real game, but good for user exp here)
-            let totalBet = 0;
-            for(let key in bets) totalBet += bets[key];
-            balance += totalBet;
-            
+            document.querySelectorAll('.chip').forEach(c => c.remove());
             bets = {};
-            updateUI();
-            
-            // Remove Chips
-            document.querySelectorAll('.chip-placed').forEach(c => c.remove());
+            // In real game you would refund, here we just clear board
         }
 
-        function spinWheel() {
+        function spin() {
             if(isSpinning) return;
-            if(Object.keys(bets).length === 0) { alert("Place a bet first!"); return; }
+            if(Object.keys(bets).length === 0) { alert("Place a bet!"); return; }
 
             isSpinning = true;
-            document.getElementById('winPopup').style.transform = "translate(-50%, -50%) scale(0)";
+            document.getElementById('winModal').style.transform = "translate(-50%, -50%) scale(0)";
 
-            const spinner = document.getElementById('wheelSpinner');
+            const spinner = document.getElementById('spinner');
             const ball = document.getElementById('ball');
-
-            // Result
             const result = Math.floor(Math.random() * 37); // 0-36
 
-            // Animation Math
-            // We just spin randomly for visual effect, not exact physics mapping here
-            const rotation = 1440 + Math.random() * 360; 
-            spinner.style.transition = "transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)";
-            spinner.style.transform = `rotate(${rotation}deg)`;
+            // Wheel Spin
+            const deg = 1440 + Math.random() * 360;
+            spinner.style.transform = `rotate(${deg}deg)`;
 
-            // Ball Logic
+            // Ball Spin
             ball.style.display = 'block';
-            // Simple orbit animation via CSS keyframes or JS
-            // Here we just use a timer for simplicity of "Ball dropping"
             ball.animate([
-                { transform: 'rotate(0deg) translateY(105px)' },
-                { transform: 'rotate(-1000deg) translateY(60px)' }
-            ], {
-                duration: 4000,
-                easing: 'cubic-bezier(0.3, 1, 0.3, 1)',
-                fill: 'forwards'
-            });
+                { transform: 'rotate(0deg) translateY(100px)' },
+                { transform: `rotate(-${deg + 100}deg) translateY(60px)` }
+            ], { duration: 4000, easing: 'cubic-bezier(0.2,0.8,0.1,1)', fill: 'forwards' });
 
             setTimeout(() => {
-                isSpinning = false;
                 checkWin(result);
+                isSpinning = false;
             }, 4200);
         }
 
-        function checkWin(number) {
-            let totalWin = 0;
-            
-            // Show Result Popup
-            const popup = document.getElementById('winPopup');
-            const numText = document.getElementById('winNumText');
-            numText.innerText = number;
-            
-            // Determine Color
-            let color = 'green';
-            if(number !== 0) color = redNums.includes(number) ? 'red' : 'black';
-            
-            // Styling popup based on color
-            if(color === 'red') numText.style.color = '#ff4444';
-            else if(color === 'black') numText.style.color = '#fff';
-            else numText.style.color = '#00ff00';
+        function checkWin(num) {
+            const modal = document.getElementById('winModal');
+            document.getElementById('winNum').innerText = num;
+            modal.style.transform = "translate(-50%, -50%) scale(1)";
 
-            popup.style.transform = "translate(-50%, -50%) scale(1)";
+            let win = 0;
+            if(bets[num]) win = bets[num] * 36;
 
-            // Calculate Payouts
-            // 1. Number Match (35:1)
-            if(bets[number]) totalWin += bets[number] * 36;
-
-            // 2. Color Match (1:1)
-            if(bets[color]) totalWin += bets[color] * 2;
-
-            if(totalWin > 0) {
-                balance += totalWin;
-                showFloatingText(`+${totalWin}`);
+            if(win > 0) {
+                balance += win;
+                document.getElementById('balance').innerText = balance;
+                setTimeout(() => alert(`YOU WON PKR ${win}!`), 500);
             }
-
-            updateUI();
             
-            // Cleanup table after delay
             setTimeout(() => {
-                bets = {};
-                document.querySelectorAll('.chip-placed').forEach(c => c.remove());
-                popup.style.transform = "translate(-50%, -50%) scale(0)";
+                clearTable();
+                modal.style.transform = "translate(-50%, -50%) scale(0)";
             }, 3000);
-        }
-
-        function showFloatingText(txt) {
-            const el = document.createElement('div');
-            el.className = 'float-win';
-            el.innerText = txt;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1500);
-        }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = balance;
         }
 
     </script>
