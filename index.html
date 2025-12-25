@@ -1,148 +1,143 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Roulette - Final Fixed</title>
+    <title>Zoo Roulette - Cartoon</title>
     <style>
-        /* --- 1. CORE RESET --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        /* --- 1. CORE --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body {
             margin: 0; padding: 0;
-            background-color: #000;
+            background: #222; /* Outer border color */
             height: 100vh; width: 100vw;
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif; /* Cartoon Font */
         }
 
-        /* --- 2. THE GAME STAGE (ASPECT RATIO LOCK) --- */
-        /* Ye sabse zaroori cheez hai. Ye container game ko hamesha 9:16 shape me rakhega */
+        /* --- 2. GAME STAGE (Fixed Ratio 9:16) --- */
         #game-stage {
             position: relative;
-            width: 100vh; /* Height ke hisaab se width adjust hogi */
-            height: 100vh; 
-            max-width: 100vw; /* Screen se bahar na jaye */
-            aspect-ratio: 9/16; /* Portrait Ratio Lock */
-            background: #120505;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            width: 100vh; height: 100vh; max-width: 100vw;
+            aspect-ratio: 9/16;
+            background: url('assets/bg_zoo.jpg') no-repeat center/cover;
+            box-shadow: 0 0 30px black;
             overflow: hidden;
         }
 
-        /* Background Table Image */
-        .table-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('assets/table_dark.jpg') no-repeat center/100% 100%;
-            z-index: 1;
+        /* --- 3. RUNNING LIGHT TRACK (TOP) --- */
+        /* Design: A rectangular loop of 24 boxes */
+        .track-area {
+            position: absolute; top: 8%; left: 5%; width: 90%; height: 35%;
+            /* border: 2px solid yellow; Debug */
         }
-
-        /* --- 3. PRECISE GRID SYSTEM --- */
-        /* Is grid ko maine image ke hisaab se adjust kiya hai */
-        .grid-layer {
+        
+        .track-box {
             position: absolute;
-            top: 14%;       /* Table numbers yahan se shuru hoty hain */
-            left: 4.5%;     /* Left margin */
-            width: 91%;     /* Table width */
-            height: 72%;    /* Table height */
-            z-index: 10;
-            display: grid;
-            grid-template-columns: 20% 1fr 1fr 1fr; /* Left Sidebar + 3 Number Cols */
-            gap: 1px;
-        }
-
-        /* Generic Click Zone */
-        .zone { position: relative; /* border: 1px solid rgba(255,255,0,0.1); Debug only */ }
-
-        /* Left Side Bets (1st 12, etc) */
-        .sidebar-zone { grid-column: 1; grid-row: span 4; }
-
-        /* Special Zero Zone */
-        .zero-zone {
-            position: absolute; top: 7.5%; left: 24%; width: 71.5%; height: 6.5%;
-            z-index: 15; /* border: 1px solid red; */
-        }
-
-        /* Chips on Table */
-        .chip {
-            position: absolute; top: 50%; left: 50%;
-            width: 80%; /* Box ke hisaab se size */
-            max-width: 35px; aspect-ratio: 1;
-            transform: translate(-50%, -50%) scale(0);
-            animation: dropIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            pointer-events: none;
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.8));
-            z-index: 20;
-        }
-        @keyframes dropIn { to { transform: translate(-50%, -50%) scale(1); } }
-
-        /* --- 4. UI ELEMENTS --- */
-        
-        /* Timer (Top Left) */
-        .timer-badge {
-            position: absolute; top: 2%; left: 3%;
-            width: 12%; aspect-ratio: 1;
-            background: rgba(0,0,0,0.7); border: 2px solid gold; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center; z-index: 50;
-        }
-        .timer-text { color: white; font-weight: bold; font-size: clamp(14px, 4vw, 20px); }
-        .timer-red { border-color: red; color: red; animation: blink 0.5s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        /* Right Side Chip Selector (Single Chip + Arrows) */
-        .chip-panel {
-            position: absolute; right: 2%; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-            z-index: 60;
-        }
-        .arrow {
-            width: 40px; height: 40px;
-            background: url('assets/btn_arrow.png') no-repeat center/contain;
-            cursor: pointer; filter: drop-shadow(0 2px 2px #000);
-        }
-        .arrow.down { transform: rotate(180deg); }
-        .arrow:active { transform: scale(0.9) rotate(inherit); }
-        
-        .selected-chip-display {
-            width: 70px; height: 70px;
-            transition: transform 0.2s;
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8));
-        }
-        .chip-bounce { animation: bounce 0.3s; }
-        @keyframes bounce { 0%{transform:scale(0.8);} 50%{transform:scale(1.1);} 100%{transform:scale(1);} }
-
-        /* Bottom Info Bar (Minimal) */
-        .bottom-bar {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            height: 6%; background: rgba(0,0,0,0.9);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; border-top: 1px solid #333; z-index: 60;
-        }
-        .info-group { display: flex; flex-direction: column; }
-        .info-label { color: #aaa; font-size: 10px; }
-        .info-val { color: #ffd700; font-weight: bold; font-size: 14px; }
-
-        /* Wheel Overlay */
-        .overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95); z-index: 100;
+            width: 13.5%; height: 22%; /* Calculated size */
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.5);
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.5s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
         }
-        .overlay.active { opacity: 1; pointer-events: auto; }
-        .wheel-box { position: relative; width: 85%; aspect-ratio: 1; transform: scale(0.8); transition: 0.5s; }
-        .overlay.active .wheel-box { transform: scale(1); }
-        .w-img { position: absolute; width:100%; height:100%; }
-        .pointer { position: absolute; top:-2%; left:48%; width:4%; height:8%; background:gold; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index:10; }
+        .track-box img { width: 85%; height: 85%; object-fit: contain; }
+
+        /* The Selection Light */
+        .highlight {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('assets/frame_light.png') no-repeat center/100% 100%;
+            z-index: 10; filter: drop-shadow(0 0 10px orange);
+            animation: pulse 0.2s infinite alternate;
+        }
+        @keyframes pulse { from{transform:scale(1);} to{transform:scale(1.05);} }
+
+        /* --- 4. CENTER AREA (Timer & Shark) --- */
+        .center-area {
+            position: absolute; top: 16%; left: 16%; width: 68%; height: 20%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
         
-        /* Win Popup */
-        .win-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 70%; aspect-ratio: 2/1;
-            background: url('assets/win_popup.png') no-repeat center/contain;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 200; transition: 0.3s;
+        .shark-jackpot {
+            width: 90px; height: 90px;
+            background: url('assets/icon_shark.png') no-repeat center/contain;
+            filter: drop-shadow(0 5px 0 rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;
+            cursor: pointer;
         }
-        .win-txt { font-size: 40px; color: gold; font-weight: 900; text-shadow: 0 2px 5px #000; margin:0; }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+
+        .timer-bubble {
+            background: orange; border: 3px solid white;
+            color: white; font-size: 24px; font-weight: bold;
+            padding: 5px 20px; border-radius: 20px;
+            margin-top: 10px; text-shadow: 0 2px 0 #cc5500;
+            box-shadow: 0 4px 0 #cc5500;
+        }
+
+        /* --- 5. BETTING BUTTONS (BOTTOM) --- */
+        .betting-grid {
+            position: absolute; bottom: 15%; left: 5%; width: 90%; height: 35%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .bet-btn {
+            position: relative;
+            background: url('assets/btn_wood.png') no-repeat center/100% 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.1s;
+            filter: drop-shadow(0 5px 0 #3e2723);
+        }
+        .bet-btn:active { transform: translateY(5px); filter: none; }
+
+        .bet-icon { width: 70%; height: 70%; object-fit: contain; }
+        .bet-multi { 
+            position: absolute; top: -5px; right: -5px;
+            background: red; color: white; font-size: 10px; padding: 2px 5px; 
+            border-radius: 10px; border: 1px solid white; font-weight: bold;
+        }
+        .my-bet-badge {
+            position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            background: gold; color: black; font-size: 11px; padding: 2px 8px;
+            border-radius: 10px; border: 1px solid white; font-weight: bold;
+            display: none;
+        }
+
+        /* --- 6. HUD (Chips & Balance) --- */
+        .hud {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 12%;
+            background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 15px; backdrop-filter: blur(5px);
+        }
+
+        .balance-pill {
+            background: #333; border: 2px solid gold; border-radius: 25px;
+            padding: 5px 15px; color: gold; font-weight: bold; font-size: 16px;
+        }
+
+        .chip-rack { display: flex; gap: 10px; }
+        .chip {
+            width: 45px; height: 45px; cursor: pointer; transition: 0.2s;
+            background: url('assets/chip_10.png') no-repeat center/contain;
+        }
+        .chip.active { transform: scale(1.2); filter: drop-shadow(0 0 5px white); }
+
+        /* --- 7. WIN OVERLAY --- */
+        .win-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: none;
+        }
+        .win-banner { width: 80%; max-width: 300px; animation: bounceIn 0.5s; }
+        .win-amount { font-size: 50px; color: gold; font-weight: 900; text-shadow: 0 3px 0 #000; margin-top: -40px; }
+        @keyframes bounceIn { 0%{transform:scale(0);} 60%{transform:scale(1.2);} 100%{transform:scale(1);} }
 
     </style>
 </head>
@@ -150,175 +145,232 @@
 
     <div id="game-stage">
         
-        <div class="table-bg"></div>
-
-        <div class="zero-zone zone" onclick="placeBet(0, this)"></div>
-
-        <div class="grid-layer" id="grid">
-            <div class="sidebar-zone zone" onclick="placeBet('1st12', this)"></div>
-            <div class="sidebar-zone zone" onclick="placeBet('2nd12', this)"></div>
-            <div class="sidebar-zone zone" onclick="placeBet('3rd12', this)"></div>
-            
+        <div class="track-area" id="trackArea">
             </div>
 
-        <div class="timer-badge" id="timerBadge">
-            <span class="timer-text" id="timer">10</span>
+        <div class="center-area">
+            <div class="shark-jackpot" onclick="placeBet('shark', this)"></div>
+            <div class="timer-bubble" id="timer">15</div>
         </div>
 
-        <div class="chip-panel">
-            <div class="arrow up" onclick="changeChip(1)"></div>
-            <img src="assets/chip_10.png" id="chipDisplay" class="selected-chip-display">
-            <div class="arrow down" onclick="changeChip(-1)"></div>
+        <div class="betting-grid">
+            <div class="bet-btn" onclick="placeBet('swallow', this)">
+                <span class="bet-multi">6x</span><img src="assets/icon_swallow.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('pigeon', this)">
+                <span class="bet-multi">8x</span><img src="assets/icon_pigeon.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('peacock', this)">
+                <span class="bet-multi">8x</span><img src="assets/icon_peacock.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('eagle', this)">
+                <span class="bet-multi">12x</span><img src="assets/icon_eagle.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+
+            <div class="bet-btn" onclick="placeBet('rabbit', this)">
+                <span class="bet-multi">6x</span><img src="assets/icon_rabbit.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('monkey', this)">
+                <span class="bet-multi">8x</span><img src="assets/icon_monkey.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('panda', this)">
+                <span class="bet-multi">8x</span><img src="assets/icon_panda.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
+            <div class="bet-btn" onclick="placeBet('lion', this)">
+                <span class="bet-multi">12x</span><img src="assets/icon_lion.png" class="bet-icon">
+                <div class="my-bet-badge">0</div>
+            </div>
         </div>
 
-        <div class="bottom-bar">
-            <div class="info-group">
-                <span class="info-label">Total Bet</span>
-                <span class="info-val">Rs<span id="betTxt">0</span></span>
-            </div>
-            <div class="info-group" style="align-items: flex-end;">
-                <span class="info-label">Balance</span>
-                <span class="info-val">Rs<span id="balTxt">50000</span></span>
-            </div>
+        <div class="hud">
+            <div class="balance-pill">PKR <span id="balance">50000</span></div>
+            <div class="chip-rack">
+                <div class="chip active" onclick="setChip(100)"></div>
+                </div>
         </div>
 
-        <div class="overlay" id="wheelLayer">
-            <div class="wheel-box">
-                <div class="pointer"></div>
-                <img src="assets/wheel_outer.png" class="w-img">
-                <img src="assets/wheel_spinner.png" class="w-img" id="spinner">
-            </div>
-            <div class="win-modal" id="winModal">
-                <h1 class="win-txt" id="winNum">0</h1>
-            </div>
+        <div class="win-modal" id="winScreen">
+            <img src="assets/win_banner.png" class="win-banner">
+            <div class="win-amount" id="winVal">+0</div>
         </div>
 
     </div>
 
     <script>
-        // --- DATA ---
-        const chips = [10, 50, 100, 500, 1000];
-        const chipImgs = ['assets/chip_10.png', 'assets/chip_50.png', 'assets/chip_100.png', 'assets/chip_500.png', 'assets/chip_1k.png'];
-        let chipIdx = 0;
+        // --- LOGIC ---
+        // Coordinates for the 24 box rectangular loop (Top, Right, Bottom, Left)
+        // This is a simplified visual mapping for the grid 8x5 approximately
         
-        let balance = 50000;
-        let currentBet = 0;
-        let bets = {};
-        let time = 10;
-        let timerInt;
+        // Loop Order: 24 items
+        const trackPattern = [
+            'swallow', 'rabbit', 'pigeon', 'monkey', 'peacock', 'panda', 'eagle', 'lion',
+            'swallow', 'rabbit', 'pigeon', 'monkey', 'peacock', 'panda', 'eagle', 'lion',
+            'swallow', 'rabbit', 'pigeon', 'monkey', 'shark', 'lion', 'eagle', 'peacock'
+        ];
 
-        window.onload = () => {
-            createTable();
-            startRound();
+        const animalImg = {
+            'swallow': 'assets/icon_swallow.png', 'rabbit': 'assets/icon_rabbit.png',
+            'pigeon': 'assets/icon_pigeon.png', 'monkey': 'assets/icon_monkey.png',
+            'peacock': 'assets/icon_peacock.png', 'panda': 'assets/icon_panda.png',
+            'eagle': 'assets/icon_eagle.png', 'lion': 'assets/icon_lion.png',
+            'shark': 'assets/icon_shark.png'
         };
 
-        function createTable() {
-            const grid = document.getElementById('grid');
-            // Create 36 boxes. 
-            // NOTE: Grid fills Row by Row. 
-            // Row 1: 1, 2, 3
-            // Row 2: 4, 5, 6 etc.
-            for(let i=1; i<=36; i++) {
-                const d = document.createElement('div');
-                d.className = 'zone';
-                d.onclick = function() { placeBet(i, this); };
-                grid.appendChild(d);
+        const multipliers = {
+            'swallow':6, 'rabbit':6, 'pigeon':8, 'monkey':8, 
+            'peacock':8, 'panda':8, 'eagle':12, 'lion':12, 'shark':100
+        };
+
+        let balance = 50000;
+        let chipVal = 100;
+        let bets = {};
+        let gameState = 'BETTING';
+        let timer = 15;
+        let currentLight = 0;
+
+        window.onload = () => {
+            createTrack();
+            startLoop();
+        };
+
+        // --- CREATE TRACK (VISUAL LOOP) ---
+        function createTrack() {
+            const area = document.getElementById('trackArea');
+            // We need to position 24 boxes in a rectangle.
+            // 7 top, 5 right, 7 bottom, 5 left (approx)
+            
+            // For simplicity in HTML/CSS without complex math, we use absolute % positions.
+            const positions = [
+                // Top Row (Left to Right)
+                {l:0, t:0}, {l:14, t:0}, {l:28, t:0}, {l:42, t:0}, {l:56, t:0}, {l:70, t:0}, {l:84, t:0},
+                // Right Col (Down)
+                {l:84, t:25}, {l:84, t:50}, {l:84, t:75}, 
+                // Bottom Row (Right to Left)
+                {l:84, t:100}, {l:70, t:100}, {l:56, t:100}, {l:42, t:100}, {l:28, t:100}, {l:14, t:100}, {l:0, t:100},
+                // Left Col (Up)
+                {l:0, t:75}, {l:0, t:50}, {l:0, t:25}
+            ];
+            
+            // Adjust pattern to match 20 slots (standard visual loop size) or repeat pattern
+            // Let's fill 20 slots with the pattern
+            
+            for(let i=0; i<20; i++) {
+                const animal = trackPattern[i % trackPattern.length];
+                const div = document.createElement('div');
+                div.className = 'track-box';
+                div.id = `slot-${i}`;
+                div.style.left = positions[i].l + '%';
+                div.style.top = positions[i].t * 0.78 + '%'; // Scale height to fit
+                
+                const img = document.createElement('img');
+                img.src = animalImg[animal];
+                div.appendChild(img);
+                area.appendChild(div);
+                
+                // Store animal data on element
+                div.dataset.animal = animal;
             }
         }
 
-        // --- CHIP LOGIC ---
-        function changeChip(dir) {
-            chipIdx += dir;
-            if(chipIdx >= chips.length) chipIdx=0;
-            if(chipIdx < 0) chipIdx = chips.length-1;
-            
-            const img = document.getElementById('chipDisplay');
-            img.classList.remove('chip-bounce');
-            void img.offsetWidth; // reset anim
-            img.src = chipImgs[chipIdx];
-            img.classList.add('chip-bounce');
-        }
-
         // --- BETTING ---
-        function placeBet(target, el) {
-            if(time <= 0) return; // Betting closed
-            const amt = chips[chipIdx];
-            if(balance < amt) return;
+        function setChip(val) { chipVal = val; }
 
-            balance -= amt;
-            currentBet += amt;
+        function placeBet(animal, el) {
+            if(gameState !== 'BETTING' || balance < chipVal) return;
             
-            if(!bets[target]) bets[target] = 0;
-            bets[target] += amt;
-
-            updateUI();
-
-            const c = document.createElement('img');
-            c.src = chipImgs[chipIdx];
-            c.className = 'chip';
-            // Slight random offset so they stack naturally
-            const rx = (Math.random() * 10) - 5;
-            const ry = (Math.random() * 10) - 5;
-            c.style.transform = `translate(-50%, -50%) translate(${rx}px, ${ry}px)`;
-            el.appendChild(c);
-        }
-
-        function updateUI() {
-            document.getElementById('balTxt').innerText = balance;
-            document.getElementById('betTxt').innerText = currentBet;
+            balance -= chipVal;
+            if(!bets[animal]) bets[animal] = 0;
+            bets[animal] += chipVal;
+            
+            document.getElementById('balance').innerText = balance;
+            
+            // Update UI
+            const badge = el.querySelector('.my-bet-badge');
+            if(badge) {
+                badge.style.display = 'block';
+                badge.innerText = bets[animal];
+            }
         }
 
         // --- GAME LOOP ---
-        function startRound() {
-            time = 10;
+        function startLoop() {
+            gameState = 'BETTING';
+            timer = 15;
             bets = {};
-            currentBet = 0;
-            updateUI();
+            document.querySelectorAll('.my-bet-badge').forEach(e => e.style.display='none');
+            document.getElementById('winScreen').style.display='none';
             
-            // Cleanup
-            document.querySelectorAll('.chip').forEach(c => c.remove());
-            document.getElementById('wheelLayer').classList.remove('active');
-            document.getElementById('winModal').style.transform = "translate(-50%, -50%) scale(0)";
-            document.getElementById('timerBadge').classList.remove('timer-red');
-
-            timerInt = setInterval(() => {
-                time--;
-                document.getElementById('timer').innerText = time;
-                
-                if(time <= 3) document.getElementById('timerBadge').classList.add('timer-red');
-
-                if(time <= 0) {
-                    clearInterval(timerInt);
-                    spinWheel();
+            const tInt = setInterval(() => {
+                timer--;
+                document.getElementById('timer').innerText = timer;
+                if(timer<=0) {
+                    clearInterval(tInt);
+                    spin();
                 }
             }, 1000);
         }
 
-        function spinWheel() {
-            const overlay = document.getElementById('wheelLayer');
-            const spinner = document.getElementById('spinner');
-            overlay.classList.add('active');
+        function spin() {
+            gameState = 'SPINNING';
+            // Logic: Pick random slot 0-19
+            const winIndex = Math.floor(Math.random() * 20);
+            const totalSteps = (20 * 4) + winIndex; // 4 full rounds
+            
+            let step = 0;
+            let current = 0;
+            let speed = 50;
 
-            const res = Math.floor(Math.random() * 37);
-            const deg = 1080 + Math.random() * 360; // 3+ full spins
+            function next() {
+                // Clear old light
+                const old = document.getElementById(`slot-${current}`);
+                if(old.querySelector('.highlight')) old.querySelector('.highlight').remove();
 
-            spinner.style.transition = "transform 4s cubic-bezier(0.3, 1, 0.2, 1)";
-            spinner.style.transform = `rotate(${deg}deg)`;
+                // Move next
+                current = (current + 1) % 20;
+                
+                // Add Light
+                const box = document.getElementById(`slot-${current}`);
+                const h = document.createElement('div');
+                h.className = 'highlight';
+                box.appendChild(h);
 
-            setTimeout(() => showWin(res), 4500);
+                step++;
+                
+                // Friction
+                if(totalSteps - step < 15) speed += 20;
+                if(totalSteps - step < 5) speed += 50;
+
+                if(step < totalSteps) {
+                    setTimeout(next, speed);
+                } else {
+                    setTimeout(() => checkWin(box.dataset.animal), 1000);
+                }
+            }
+            next();
         }
 
-        function showWin(num) {
-            document.getElementById('winNum').innerText = num;
-            document.getElementById('winModal').style.transform = "translate(-50%, -50%) scale(1)";
-
-            let win = 0;
-            if(bets[num]) win = bets[num] * 36;
-            // Add other logic (Red/Black) here based on 'num'
-
-            if(win > 0) balance += win;
+        function checkWin(winner) {
+            const modal = document.getElementById('winScreen');
             
-            setTimeout(startRound, 3000);
+            let winAmt = 0;
+            if(bets[winner]) winAmt = bets[winner] * multipliers[winner];
+
+            document.getElementById('winVal').innerText = winAmt > 0 ? `+${winAmt}` : "TRY AGAIN";
+            modal.style.display = 'flex';
+
+            if(winAmt > 0) {
+                balance += winAmt;
+                document.getElementById('balance').innerText = balance;
+            }
+
+            setTimeout(startLoop, 3000);
         }
 
     </script>
