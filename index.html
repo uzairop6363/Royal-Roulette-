@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Roulette - Fixed Layout</title>
+    <title>Royal Roulette - Fixed</title>
     <style>
         /* --- CORE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -12,8 +12,8 @@
             background: #000;
             font-family: 'Segoe UI', sans-serif;
             height: 100vh; width: 100vw;
-            overflow: hidden;
-            display: flex; flex-direction: column; /* Vertical Stack */
+            overflow: hidden; /* Body scroll band, sirf table scroll karega */
+            display: flex; flex-direction: column;
         }
 
         /* --- LOADING SCREEN --- */
@@ -26,22 +26,19 @@
         .loading-bar { width: 200px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; background: gold; transition: width 0.1s; }
 
-        /* --- SECTION 1: WHEEL (Top Fixed - 30% Height) --- */
+        /* --- 1. WHEEL SECTION (TOP FIXED) --- */
         .wheel-section {
-            flex: 0 0 32%; /* Fixed Height */
-            position: relative;
+            height: 240px; /* Fixed height, taake screen na bhare */
+            width: 100%;
             background: radial-gradient(circle at center, #2e1000, #000);
             border-bottom: 2px solid gold;
             display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
             z-index: 20;
+            flex-shrink: 0; /* Isay pichakne se roko */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
         
-        /* Wheel ko thora chota kiya taake fit aaye */
-        .wheel-group {
-            position: relative;
-            width: 220px; height: 220px; /* Reduced Size */
-        }
+        .wheel-group { position: relative; width: 200px; height: 200px; }
         .wheel-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .spinner { transition: transform 4s cubic-bezier(0.1, 0.8, 0.1, 1); }
         .ball { 
@@ -50,113 +47,112 @@
             z-index: 5; display: none; 
         }
         .pointer {
-            position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid gold; z-index: 10;
         }
 
-        /* --- SECTION 2: TABLE (Middle Scrollable - Auto Height) --- */
+        /* --- 2. TABLE SECTION (SCROLLABLE BEHIND CHIPS) --- */
         .table-section {
-            flex: 1; /* Takes remaining space */
+            flex-grow: 1; /* Bachi hui jagah lega */
             position: relative;
             background: #003311;
-            overflow-y: auto; /* Scroll enabled inside */
+            overflow-y: auto; /* Scroll ON */
             overflow-x: hidden;
-            box-shadow: inset 0 0 20px #000;
+            /* Bottom padding zaroori hai taake last numbers chips ke peeche na chupen */
+            padding-bottom: 140px; 
         }
 
         .table-container {
-            position: relative;
             width: 100%;
-            /* Table image width 100% fit karegi */
+            position: relative;
         }
         .table-bg { width: 100%; display: block; }
 
-        /* Grid Logic - Adjusted for TIGHT image */
+        /* Grid Setup */
         .grid-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* 3 Columns */
-            /* Padding adjust karein image ke hisaab se */
-            padding: 12% 4% 25% 4%; 
-            grid-auto-rows: 1fr; 
+            grid-template-columns: 1fr 1fr 1fr;
+            /* Padding ko adjust karein apni image ke hisaab se */
+            padding: 13% 4% 25% 4%; 
+            grid-auto-rows: 1fr;
             gap: 2px;
         }
-        
-        .bet-box { 
-            /* border: 1px solid rgba(255,255,0,0.2); Debug Border */
-            position: relative; 
-        }
+        .bet-box { position: relative; }
 
-        /* 0 aur Side Bets ki positioning */
-        .spot-0 { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 11%; 
-            z-index: 5; 
-            /* border: 1px solid red; Debug */
-        }
+        /* 0 Zone */
+        .spot-0 { position: absolute; top: 0; left: 0; width: 100%; height: 11%; z-index: 5; }
+
+        /* Color Zones */
         .side-bets-area {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 25%;
             display: flex;
         }
-        .bet-red { width: 50%; height: 100%; /* border: 1px solid red; */ }
-        .bet-black { width: 50%; height: 100%; /* border: 1px solid black; */ }
+        .bet-red { width: 50%; height: 100%; }
+        .bet-black { width: 50%; height: 100%; }
 
-        /* Chip Styling */
         .chip {
-            position: absolute; top: 50%; left: 50%; width: 28px; height: 28px;
+            position: absolute; top: 50%; left: 50%; width: 30px; height: 30px;
             transform: translate(-50%, -50%) scale(0);
             animation: popIn 0.2s forwards; pointer-events: none;
             filter: drop-shadow(0 2px 2px #000);
+            z-index: 10;
         }
         @keyframes popIn { to { transform: translate(-50%, -50%) scale(1); } }
 
-
-        /* --- SECTION 3: CONTROLS (Bottom Fixed - 15% Height) --- */
-        .controls-section {
-            flex: 0 0 16%; /* Fixed Height */
-            background: linear-gradient(to top, #1a0500, #421C02);
-            border-top: 2px solid gold;
-            position: relative; z-index: 50;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 5px 15px;
-            box-shadow: 0 -5px 15px #000;
+        /* --- 3. CONTROLS (FLOATING/FIXED BOTTOM) --- */
+        /* Ye 'absolute' hai, taake ye screen ke upar float kare */
+        .controls-overlay {
+            position: absolute; 
+            bottom: 0; left: 0; 
+            width: 100%;
+            height: 130px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 70%, transparent);
+            z-index: 100; /* Sabse upar */
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 10px;
+            pointer-events: none; /* Click through transparent parts */
         }
 
-        /* Balance Floating Badge */
+        /* Clickable elements ko wapis pointer-events all denge */
+        .balance-float, .chip-rack, .action-row { pointer-events: auto; }
+
+        /* Balance */
         .balance-float {
-            position: absolute; top: -20px; left: 20px;
-            background: #000; border: 1px solid gold; border-radius: 15px;
-            padding: 4px 15px; color: gold; font-weight: bold; font-size: 14px;
+            position: absolute; top: 20px; left: 15px;
+            background: rgba(0,0,0,0.8); border: 1px solid gold; border-radius: 20px;
+            padding: 5px 15px; color: gold; font-weight: bold; font-size: 14px;
             box-shadow: 0 4px 5px rgba(0,0,0,0.5);
-            display: flex; align-items: center; gap: 5px;
         }
 
-        /* Chip Selector */
-        .chip-row {
-            display: flex; gap: 10px; justify-content: flex-start; align-items: center;
-            overflow-x: auto; padding-bottom: 5px;
+        /* Chips */
+        .chip-rack {
+            display: flex; justify-content: center; gap: 10px;
+            align-items: center; margin-bottom: 5px;
+            pointer-events: auto;
         }
         .chip-btn { 
-            width: 45px; height: 45px; flex-shrink: 0; cursor: pointer; transition: 0.2s; 
+            width: 50px; height: 50px; cursor: pointer; transition: 0.2s; 
         }
-        .chip-btn.active { transform: translateY(-8px) scale(1.1); filter: drop-shadow(0 5px 5px #000); }
-        .chip-btn img { width: 100%; height: 100%; }
+        .chip-btn.active { transform: translateY(-10px) scale(1.15); filter: drop-shadow(0 0 8px gold); }
+        .chip-btn img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Actions */
+        /* Spin Button */
         .action-row {
-            position: absolute; top: 50%; right: 15px; transform: translateY(-50%);
-            display: flex; align-items: center; gap: 10px;
+            position: absolute; bottom: 15px; right: 15px;
+            display: flex; gap: 10px; align-items: flex-end;
         }
         .spin-btn {
-            width: 75px; height: 75px;
+            width: 80px; height: 80px;
             background: url('assets/btn_spin.png') no-repeat center/contain;
             border: none; cursor: pointer;
             filter: drop-shadow(0 4px 4px #000);
         }
         .spin-btn:active { transform: scale(0.95); }
         .clear-btn {
-            width: 40px; height: 40px;
+            width: 45px; height: 45px;
             background: url('assets/btn_clear.png') no-repeat center/contain;
-            border: none; cursor: pointer;
+            border: none; cursor: pointer; margin-bottom: 5px;
         }
 
         /* Win Popup */
@@ -165,7 +161,7 @@
             width: 250px; height: 120px;
             background: url('assets/win_popup.png') no-repeat center/contain;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .win-num { font-size: 50px; color: white; font-weight: 900; text-shadow: 0 0 10px gold; margin:0; }
 
@@ -207,12 +203,12 @@
             </div>
         </div>
 
-        <div class="controls-section">
+        <div class="controls-overlay">
             <div class="balance-float">
                 <span>PKR</span> <span id="balance">50000</span>
             </div>
 
-            <div class="chip-row">
+            <div class="chip-rack">
                 <div class="chip-btn active" onclick="setChip(10, 'assets/chip_10.png', this)"><img src="assets/chip_10.png"></div>
                 <div class="chip-btn" onclick="setChip(50, 'assets/chip_50.png', this)"><img src="assets/chip_50.png"></div>
                 <div class="chip-btn" onclick="setChip(100, 'assets/chip_100.png', this)"><img src="assets/chip_100.png"></div>
@@ -269,7 +265,6 @@
 
             const c = document.createElement('img');
             c.src = currentChipImg; c.className = 'chip';
-            // Slight Random Offset
             c.style.transform = `translate(-50%, -50%) translate(${Math.random()*6-3}px, ${Math.random()*6-3}px)`;
             el.appendChild(c);
         }
@@ -314,7 +309,9 @@
             if(win > 0) {
                 balance += win;
                 document.getElementById('balance').innerText = balance;
+                setTimeout(() => alert(`YOU WON PKR ${win}!`), 500);
             }
+            
             setTimeout(() => { clearTable(); m.style.transform = "translate(-50%, -50%) scale(0)"; }, 3000);
         }
     </script>
